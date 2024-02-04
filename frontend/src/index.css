@@ -1,12 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@600&family=Poppins&display=swap');
 
 body {
-  /* background-color: #0a0e32; */
-  /* color: #fff; */
+  font-family: 'Fira Code', monospace;
+font-family: 'Poppins', sans-serif;
+}
+.fade-in-expand {
+  transition: opacity 0.5s, transform 0.5s;
+  opacity: 0;
+  transform: scale(0.9);
+  z-index: -100;
 }
 
+.fade-in-expand.show {
+  opacity: 1;
+  transform: scale(1);
+  z-index: 1;
+}
+/*  set scrollbar size thin and background bg-zinc-900 */
+::-webkit-scrollbar {
+  width: 6px;
+  background: #1a202c;
+}
+::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
 /* ::-webkit-scrollbar {
   width: 6px;
 }

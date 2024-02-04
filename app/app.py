@@ -9,10 +9,10 @@ import numpy as np
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 app.debug = True
-song_cluster_pipeline = joblib.load('/Users/yogee/Projects/Machine Learning/Music Recommended System/app/model.pkl')
-data = joblib.load('/Users/yogee/Projects/Machine Learning/Music Recommended System/app/data.pkl')
+song_cluster_pipeline = joblib.load('model.pkl')
+data = joblib.load('data.pkl')
 
 
 client_id = "19b9d8d53dec4faebf3972405bad7516"
@@ -115,9 +115,36 @@ def recommend_songs( song_list, spotify_data, n_songs=10):
 
     
 
-@app.route('/recommend', methods=['POST'])
+@app.route('/recommend', methods=['GET'])
 def recommend():
-    song_data = request.get_json()  # Parse JSON from the request
-      # Extract song data from the parsed JSON to numpy array of objects
-    recommendation = recommend_songs(song_data["input"], data)  # Use song data as input to recommend_songs
+    #get song name from request params
+    song_name = request.args.get('song_name', default = '', type = str)
+    #search for song in spotify
+    results = sp.search(q=song_name, limit=1, type='track')
+    #get song data
+    song = {
+        'name': results['tracks']['items'][0]['name'],
+        'year': results['tracks']['items'][0]['album']['release_date'][:4]
+    }
+    #recommend songs
+    song['year'] = int(song['year'])
+    recommendation = recommend_songs([song], data)  # Use song data as input to recommend_songs
+    #get song data from recommendation and search songs from spotify
+    for song in recommendation:
+        results = sp.search(q= 'track: {} year: {}'.format(song['name'],song['year']), limit=1)
+        song['image'] = results['tracks']['items'][0]['album']['images'][0]['url'] if results['tracks']['items'][0]['album']['images'] else None
     return jsonify(recommendation)  # Return the recommendation as JSON
+
+@app.route('/search', methods=['GET'])
+def search():
+    song_name = request.args.get('song_name', default = '', type = str)
+    results = sp.search(q=song_name, limit=10, type='track')
+    songs = [{
+        'name': track['name'],
+        'album': track['album']['name'],
+        'artist': track['artists'][0]['name'],
+        'image': track['album']['images'][0]['url'] if track['album']['images'] else None,
+        'duration': track['duration_ms'],
+        'year' : track['album']['release_date'][:4]
+    } for track in results['tracks']['items']]    
+    return jsonify({'songs': songs})
